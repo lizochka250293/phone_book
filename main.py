@@ -41,9 +41,7 @@ class Contact:
         Метод задающий номер телефона и проверяющий его валидность
         """
 
-v_pupkin = Contact('Vasya', 'Pupkin')
-v_pupkin.phone('+7123456789')
-v_pupkin.phone
+
 
 class PhoneBook:
 
@@ -100,7 +98,8 @@ class PhoneBook:
         """
         Сохраняет изменения в файл
         """
-        pass
+        with open(book_filename, "wb", encoding="UTF-8") as f:
+            pickle.dump(a, fp
 
     def load_book(self, book_filename):
         """
