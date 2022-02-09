@@ -99,7 +99,7 @@ class PhoneBook:
         Сохраняет изменения в файл
         """
         with open(book_filename, "wb", encoding="UTF-8") as f:
-            pickle.dump(a, fp
+            pickle.dump(a, fp)
 
     def load_book(self, book_filename):
         """
