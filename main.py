@@ -1,3 +1,4 @@
+import string
 import os  # Библиотека, необходимаяя для получения списка файлов и папок
 import json  # Можно применять в качестве формата для хранения книги
 import csv  # Так же можно применять в качестве формата хранения
@@ -15,6 +16,7 @@ class Contact:
         self.first_name = first_name
         self.last_name = last_name
 
+
     @property
     def phone(self):
         """
@@ -22,29 +24,46 @@ class Contact:
         :return:
         """
         return self.__phone
+    @staticmethod
+    def is_include_digit(phone):
+        ph: str = phone[1:]
+        if ph.isdigit():
+            return True
+        return False
 
     @phone.setter
     def phone(self, phone):
-        if not isinstance(phone,  int):
-            raise ValueError("Номер должен состоять из цифр")
+        if not Contact.is_include_digit(phone):
+            raise ValueError("Телефон должен состоять из цифр")
         self.__phone = phone
 
         """
         Метод задающий номер телефона и проверяющий его валидность
         """
 
+v_pupkin = Contact('Vasya', 'Pupkin')
+v_pupkin.phone('+7123456789')
+v_pupkin.phone
+
 class PhoneBook:
+
     contact_list = []
     book_data = None
+
     def __init__(self, book_filename):
-        self.book_data = book_filename
+        # Check if file exists
+        self.load_book(book_filename)
+
 
     def add_contact(self, contact):
         """
         Метод добавляющий экземпляр класса Contact в contact_list
         :param contact: Экземпляр класса Contact например: c = Contact('Алексей', 'Иванов')
         """
-        Contact.contact_list.append(self)
+        self.contact_list.append(contact)
+
+
+
 
     def get_contact(self, **kwargs):
         """
@@ -53,7 +72,20 @@ class PhoneBook:
         Например:
             book.get_contact(first_name='Олег') -> [<class Contact: Олег Иванов>, <class Contact: Олег Петров>]
         """
-        return kwargs
+        contacts = []
+        for item in self.contact_list:
+            result = []
+            for key, value in kwargs.items():
+                try:
+                    result.append(item.__getattr__(key) == value)
+                except:
+                    print('Такого атрибута нет')
+            if all(result):
+                contacts.append(item)
+        return contacts
+
+    def get_contact_index(self, contact):
+        return self.contact_list.index(contact)
 
     def remove_contact(self, index):
         """
@@ -61,9 +93,8 @@ class PhoneBook:
         :param index: индекс элемента в списке contact_list
         :return: Contact
         """
-        for num in range(len(contact_list)):
-            del.self.contact[num])
-        return self.contact[num]
+
+        return self.contact_list.pop(index)
 
     def save_changes(self):
         """
@@ -75,7 +106,8 @@ class PhoneBook:
         """
         Загружает список контактов из файла телефонной книги. Если файл отсутствует, то создает его
         """
-        pass
+        with open(book_filename, 'r', encoding="UTF-8") as f:
+            self.book_data = json.load(f)
 
 
 def touch(path):
@@ -83,6 +115,7 @@ def touch(path):
     with open(path, 'a', encoding='utf-8'):
         os.utime(path, None)
 
+book = PhoneBook('books/book1.json')
 
 def start():
     # Проверяем папку с телефонными книгами и если ее нет, то создаем
