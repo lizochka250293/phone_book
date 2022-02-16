@@ -12,9 +12,10 @@ class Contact:
     last_name = ''
     __phone = ''
 
-    def __init__(self, first_name, last_name):
+    def __init__(self, first_name, last_name, phone):
         self.first_name = first_name
         self.last_name = last_name
+        self.__phone = phone
 
 
     @property
@@ -44,12 +45,13 @@ class Contact:
 
 
 class PhoneBook:
-
+    book_filename = ''
     contact_list = []
     book_data = None
 
     def __init__(self, book_filename):
         # Check if file exists
+        self.book_filename = book_filename
         self.load_book(book_filename)
 
 
@@ -75,10 +77,10 @@ class PhoneBook:
             result = []
             for key, value in kwargs.items():
                 try:
-                    result.append(item.__getattr__(key) == value)
+                    result.append(item.__getattribute__(key) == value)
                 except:
                     print('Такого атрибута нет')
-            if all(result):
+            if len(result) and all(result):
                 contacts.append(item)
         return contacts
 
@@ -98,8 +100,16 @@ class PhoneBook:
         """
         Сохраняет изменения в файл
         """
-        with open(book_filename, "wb", encoding="UTF-8") as f:
-            pickle.dump(a, fp)
+        self.book_data = []
+        for item in self.contact_list:
+            self.book_data.append({
+                'first_name': item.first_name,
+                'last_name': item.last_name,
+                'phone': item.phone
+            })
+
+        with open(self.book_filename, "w", encoding="UTF-8") as f:
+            json.dump(self.book_data, f)
 
     def load_book(self, book_filename):
         """
@@ -107,6 +117,9 @@ class PhoneBook:
         """
         with open(book_filename, 'r', encoding="UTF-8") as f:
             self.book_data = json.load(f)
+        if self.book_data:
+            for item in self.book_data:
+                self.add_contact(Contact(**item))
 
 
 def touch(path):
@@ -114,7 +127,7 @@ def touch(path):
     with open(path, 'a', encoding='utf-8'):
         os.utime(path, None)
 
-book = PhoneBook('books/book1.json')
+# book = PhoneBook('books/book1.json')
 
 def start():
     # Проверяем папку с телефонными книгами и если ее нет, то создаем
@@ -158,3 +171,59 @@ def start():
     phone_book = PhoneBook(book_filename)
 
     print(phone_book)
+
+    while True:
+        answers = '0: Создать контакт\n1: Удалить контакт\n' \
+                  '2: Получить контакт\n3: Сохранить изменения\n' \
+                  '4: Напечатать список контаков\n!q: Выход\n'
+        answer = input(answers)
+        if answer == '0':
+            # Add contact
+            contact_data = {
+                'first_name': input('Введите имя: '),
+                'last_name': input('Введите фамилию: '),
+                'phone': input('Введите телефон: ')
+            }
+            phone_book.add_contact(Contact(**contact_data))
+
+        elif answer == '1':
+            # Delete contact
+            try:
+                index = int(input('Введите номер контакта из списка'))
+                phone_book.remove_contact(index)
+            except:
+                print('Произошла ошибка!\n')
+            pass
+        elif answer == '2':
+            # Get contact
+            contact_data = {
+                'first_name': input('Введите имя: '),
+                'last_name': input('Введите фамилию: '),
+                'phone': input('Введите телефон: ')
+            }
+            kwargs = {}
+            for key in contact_data.keys():
+                if contact_data[key] != '':
+                    kwargs[key] = contact_data[key]
+            contacts = phone_book.get_contact(**kwargs)
+            for index, contact in enumerate(contacts):
+                print(f'{index}: {contact.first_name} {contact.last_name} {contact.phone}')
+            print('\n')
+        elif answer == '3':
+            # Save changes
+            phone_book.save_changes()
+            print('Saved!')
+        elif answer == '4':
+            # Get contact list
+            for index, contact in enumerate(phone_book.contact_list):
+                print(f'{index}: {contact.first_name} {contact.last_name} {contact.phone}')
+            print('\n')
+
+        elif answer == '!q':
+            # Exit
+            break
+
+    print('До свидания!')
+
+
+start()
